@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en"><!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#007bff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Mobile Numerology">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23007bff' width='180' height='180'/><text x='50%' y='50%' font-size='80' fill='white' text-anchor='middle' dominant-baseline='central' font-weight='bold'>M</text></svg>">
+
+    <!-- Register Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+    </script>
+```
+
+---
+
+## **Step 3: Folder Structure**
+
+Your files should look like this:
+```
+your-app-folder/
+├── index.html                 (Your calculator app)
+├── manifest.json             (Created above)
+├── service-worker.js         (Created above)
+└── (any CSS/JS files if external)
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Numerology Calculator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .form-container { background: white; padding: 30px; margin: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #333; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        button { background: #007bff; color: white; padding: 12px 30px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .results { background: white; padding: 30px; margin: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { font-size: 24px; font-weight: bold; }
+        .header p { font-size: 16px; color: #666; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px; }
+        .info-item { margin-bottom: 15px; }
+        .info-label { font-size: 11px; font-weight: bold; color: #666; }
+        .info-value { font-size: 14px; }
+        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #ccc; }
+        .section h2 { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #999; }
+        th, td { border: 1px solid #999; padding: 10px; text-align: left; }
+        th { background: #f0f0f0; font-weight: bold; }
+        .text-right { text-align: right; }
+        .page-break { page-break-after: always; margin: 50px 0; }
+        .name-table { width: 100%; margin-bottom: 20px; }
+        .name-table-header { background: #b3d9ff; }
+        .name-matching-table { width: 100%; }
+        .name-matching-table th { background: #b3d9ff; text-align: center; }
+        .name-matching-table td { text-align: center; }
+        .recommendation { font-size: 16px; font-weight: bold; margin-top: 10px; padding: 10px; border-radius: 5px; }
+        .good { color: green; }
+        .bad { color: red; }
+        .letter-box { width: 20px; height: 20px; border: 1px solid #999; display: inline-block; margin: 2px; text-align: center; line-height: 20px; font-weight: bold; font-size: 11px; }
+        .yellow-bg { background: #ffff99; }
+        .blue-bg { background: #e6f2ff; }
+        @media print { 
+            body { margin: 0; padding: 0; } 
+            .form-container { display: none; } 
+            button { display: none; } 
+            .section { page-break-inside: avoid; }
+            .page-break { page-break-before: always; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        const chaldeanMap = {
+            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'U': 6, 'O': 7, 'F': 8, 'I': 1,
+            'K': 2, 'G': 3, 'M': 4, 'H': 5, 'V': 6, 'Z': 7, 'P': 8, 'J': 1, 'R': 2,
+            'L': 3, 'T': 4, 'N': 5, 'W': 6, 'Q': 1, 'S': 3, 'X': 5, 'Y': 1
+        };
+
+        const numberToAlphabet = {
+            1: ['A', 'I', 'J', 'Q', 'Y'],
+            2: ['B', 'K', 'R'],
+            3: ['C', 'G', 'L', 'S'],
+            4: ['D', 'M', 'T'],
+            5: ['E', 'H', 'N', 'X'],
+            6: ['U', 'V', 'W'],
+            7: ['O', 'Z'],
+            8: ['F', 'P'],
+            9: ['O', 'Z']
+        };
+
+        const pairingCompatibility = {
+            '11': { comp: 'Good', pts: 5 }, '12': { comp: 'Good', pts: 5 }, '13': { comp: 'Bad', pts: 0 },
+            '14': { comp: 'Bad', pts: 0 }, '15': { comp: 'Good', pts: 5 }, '16': { comp: 'Bad', pts: 0 },
+            '17': { comp: 'Good', pts: 5 }, '18': { comp: 'Bad', pts: 0 }, '19': { comp: 'Good', pts: 5 },
+            '21': { comp: 'Exception', pts: 0 }, '22': { comp: 'Exception', pts: 0 }, '23': { comp: 'Bad', pts: 0 },
+            '24': { comp: 'Bad', pts: 0 }, '25': { comp: 'Good', pts: 5 }, '26': { comp: 'Bad', pts: 0 },
+            '27': { comp: 'Bad', pts: 0 }, '28': { comp: 'Bad', pts: 0 }, '29': { comp: 'Exception', pts: 0 },
+            '31': { comp: 'Good', pts: 5 }, '32': { comp: 'Bad', pts: 0 }, '33': { comp: 'Bad', pts: 0 },
+            '34': { comp: 'Bad', pts: 0 }, '35': { comp: 'Bad', pts: 0 }, '36': { comp: 'Good', pts: 5 },
+            '37': { comp: 'Good', pts: 5 }, '38': { comp: 'Good', pts: 5 }, '39': { comp: 'Exception', pts: 0 },
+            '41': { comp: 'Bad', pts: 0 }, '42': { comp: 'Bad', pts: 0 }, '43': { comp: 'Bad', pts: 0 },
+            '44': { comp: 'Bad', pts: 0 }, '45': { comp: 'Bad', pts: 0 }, '46': { comp: 'Bad', pts: 0 },
+            '47': { comp: 'Good', pts: 5 }, '48': { comp: 'Bad', pts: 0 }, '49': { comp: 'Exception', pts: 0 },
+            '51': { comp: 'Good', pts: 5 }, '52': { comp: 'Good', pts: 5 }, '53': { comp: 'Bad', pts: 0 },
+            '54': { comp: 'Bad', pts: 0 }, '55': { comp: 'Good', pts: 5 }, '56': { comp: 'Bad', pts: 0 },
+            '57': { comp: 'Good', pts: 5 }, '58': { comp: 'Bad', pts: 0 }, '59': { comp: 'Good', pts: 5 },
+            '61': { comp: 'Bad', pts: 0 }, '62': { comp: 'Bad', pts: 0 }, '63': { comp: 'Good', pts: 5 },
+            '64': { comp: 'Bad', pts: 0 }, '65': { comp: 'Bad', pts: 0 }, '66': { comp: 'Good', pts: 5 },
+            '67': { comp: 'Bad', pts: 0 }, '68': { comp: 'Exception', pts: 0 }, '69': { comp: 'Good', pts: 5 },
+            '71': { comp: 'Bad', pts: 0 }, '72': { comp: 'Bad', pts: 0 }, '73': { comp: 'Good', pts: 5 },
+            '74': { comp: 'Good', pts: 5 }, '75': { comp: 'Good', pts: 5 }, '76': { comp: 'Bad', pts: 0 },
+            '77': { comp: 'Good', pts: 5 }, '78': { comp: 'Exception', pts: 0 }, '79': { comp: 'Bad', pts: 0 },
+            '81': { comp: 'Bad', pts: 0 }, '82': { comp: 'Bad', pts: 0 }, '83': { comp: 'Good', pts: 5 },
+            '84': { comp: 'Bad', pts: 0 }, '85': { comp: 'Bad', pts: 0 }, '86': { comp: 'Good', pts: 5 },
+            '87': { comp: 'Exception', pts: 0 }, '88': { comp: 'Bad', pts: 0 }, '89': { comp: 'Good', pts: 5 },
+            '91': { comp: 'Good', pts: 5 }, '92': { comp: 'Exception', pts: 0 }, '93': { comp: 'Exception', pts: 0 },
+            '94': { comp: 'Exception', pts: 0 }, '95': { comp: 'Good', pts: 5 }, '96': { comp: 'Good', pts: 5 },
+            '97': { comp: 'Bad', pts: 0 }, '98': { comp: 'Good', pts: 5 }, '99': { comp: 'Good', pts: 5 }
+        };
+
+        const compoundDestinyMap = {
+            '11': { comp: 'Neutral' }, '12': { comp: 'Friend' }, '13': { comp: 'Friend' },
+            '14': { comp: 'Enemy' }, '15': { comp: 'Friend' }, '16': { comp: 'Enemy' },
+            '17': { comp: 'Neutral' }, '18': { comp: 'Enemy' }, '19': { comp: 'Friend' },
+            '21': { comp: 'Friend' }, '22': { comp: 'Friend' }, '23': { comp: 'Friend' },
+            '24': { comp: 'Enemy' }, '25': { comp: 'Friend' }, '26': { comp: 'Enemy' },
+            '27': { comp: 'Neutral' }, '28': { comp: 'Enemy' }, '29': { comp: 'Neutral' },
+            '31': { comp: 'Friend' }, '32': { comp: 'Friend' }, '33': { comp: 'Neutral' },
+            '34': { comp: 'Enemy' }, '35': { comp: 'Enemy' }, '36': { comp: 'Enemy' },
+            '37': { comp: 'Friend' }, '38': { comp: 'Friend' }, '39': { comp: 'Friend' },
+            '41': { comp: 'Neutral' }, '42': { comp: 'Enemy' }, '43': { comp: 'Enemy' },
+            '44': { comp: 'Neutral' }, '45': { comp: 'Friend' }, '46': { comp: 'Friend' },
+            '47': { comp: 'Friend' }, '48': { comp: 'Enemy' }, '49': { comp: 'Enemy' },
+            '51': { comp: 'Friend' }, '52': { comp: 'Enemy' }, '53': { comp: 'Neutral' },
+            '54': { comp: 'Friend' }, '55': { comp: 'Neutral' }, '56': { comp: 'Friend' },
+            '57': { comp: 'Neutral' }, '58': { comp: 'Neutral' }, '59': { comp: 'Enemy' },
+            '61': { comp: 'Enemy' }, '62': { comp: 'Enemy' }, '63': { comp: 'Enemy' },
+            '64': { comp: 'Friend' }, '65': { comp: 'Friend' }, '66': { comp: 'Neutral' },
+            '67': { comp: 'Friend' }, '68': { comp: 'Friend' }, '69': { comp: 'Neutral' },
+            '71': { comp: 'Enemy' }, '72': { comp: 'Enemy' }, '73': { comp: 'Friend' },
+            '74': { comp: 'Friend' }, '75': { comp: 'Neutral' }, '76': { comp: 'Friend' },
+            '77': { comp: 'Neutral' }, '78': { comp: 'Enemy' }, '79': { comp: 'Neutral' },
+            '81': { comp: 'Enemy' }, '82': { comp: 'Enemy' }, '83': { comp: 'Friend' },
+            '84': { comp: 'Enemy' }, '85': { comp: 'Friend' }, '86': { comp: 'Enemy' },
+            '87': { comp: 'Enemy' }, '88': { comp: 'Neutral' }, '89': { comp: 'Enemy' },
+            '91': { comp: 'Friend' }, '92': { comp: 'Neutral' }, '93': { comp: 'Friend' },
+            '94': { comp: 'Enemy' }, '95': { comp: 'Enemy' }, '96': { comp: 'Friend' },
+            '97': { comp: 'Neutral' }, '98': { comp: 'Enemy' }, '99': { comp: 'Neutral' }
+        };
+
+        function numberToSingleDigit(num) {
+            while (num >= 10) num = Math.floor(num / 10) + (num % 10);
+            return num;
+        }
+
+        function calculateNameNumber(name) {
+            return name.toUpperCase().split('').reduce((sum, char) => sum + (chaldeanMap[char] || 0), 0);
+        }
+
+        function getCompatibility(num1, num2) {
+            const key = '' + num1 + num2;
+            return pairingCompatibility[key] || { comp: 'Neutral', pts: 0 };
+        }
+
+        function convertMobileNumber(mobile) {
+            const digits = mobile.split('');
+            const result = [];
+            for (let i = 0; i < digits.length; i++) {
+                if (digits[i] === '0') {
+                    let found = false;
+                    for (let j = i - 1; j >= 0; j--) {
+                        if (digits[j] !== '0') {
+                            result.push(digits[j]);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) result.push('0');
+                } else {
+                    result.push(digits[i]);
+                }
+            }
+            return result.join('');
+        }
+
+        function calculate(data) {
+            const today = new Date();
+            const birthDate = new Date(data.year, data.month - 1, data.day);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+            age++;
+
+            const pn = numberToSingleDigit(parseInt(data.day));
+            const dn = numberToSingleDigit(parseInt(data.day) + parseInt(data.month) + parseInt(data.year));
+            
+            const mobileTotal = data.mobileNumber.split('').reduce((s, d) => s + parseInt(d), 0);
+            const mobileSingleDigit = numberToSingleDigit(mobileTotal);
+            const processedMobile = convertMobileNumber(data.mobileNumber);
+
+            const firstNameNum = calculateNameNumber(data.firstName);
+            const middleNameNum = calculateNameNumber(data.middleName);
+            const lastNameNum = calculateNameNumber(data.lastName);
+
+            let step1Points = 0;
+            const pairings = [];
+            for (let i = 0; i < processedMobile.length - 1; i++) {
+                const compat = getCompatibility(parseInt(processedMobile[i]), parseInt(processedMobile[i + 1]));
+                step1Points += compat.pts;
+                pairings.push({
+                    pairNum: i + 1,
+                    pair: processedMobile[i] + processedMobile[i + 1],
+                    compatibility: compat.comp,
+                    points: compat.pts
+                });
+            }
+
+            const digit1 = Math.floor(mobileTotal / 10);
+            const digit2 = mobileTotal % 10;
+            const compoundCompat = compoundDestinyMap['' + digit1 + digit2] || { comp: 'Neutral' };
+            const step2Points = (compoundCompat.comp === 'Friend' || compoundCompat.comp === 'Neutral') ? 30 : 0;
+
+            const pnDnToUse = age <= 35 ? pn : dn;
+            const finalCompat = compoundDestinyMap['' + mobileSingleDigit + pnDnToUse] || { comp: 'Neutral' };
+            const step3Points = (finalCompat.comp === 'Friend' || finalCompat.comp === 'Neutral') ? 25 : 0;
+
+            const totalPoints = step1Points + step2Points + step3Points;
+            const firstDigitSum = digit1 + digit2;
+            const showSecondStep = firstDigitSum >= 10;
+
+            return {
+                age, pn, dn, mobileTotal, mobileSingleDigit, processedMobile, digit1, digit2,
+                firstNameNum, middleNameNum, lastNameNum, totalNameNum: firstNameNum + middleNameNum + lastNameNum,
+                pairings, step1Points, compoundCompat: compoundCompat.comp, step2Points,
+                pnDnToUse, finalCompat: finalCompat.comp, step3Points, totalPoints, firstDigitSum, showSecondStep,
+                recommendation: totalPoints >= 75 ? 'MOBILE No. TO BE CONSIDERED (AS >= 75)' : 'MOBILE No. NOT TO BE CONSIDERED (AS < 75)'
+            };
+        }
+
+        const app = document.getElementById('app');
+        let results = null;
+        let formData = { firstName: '', middleName: '', lastName: '', day: '', month: '', year: '', mobileNumber: '' };
+
+        function renderForm() {
+            app.innerHTML = `
+                <div class="container">
+                    <div class="form-container">
+                        <h1 style="text-align: center; margin-bottom: 30px; font-size: 28px;">Mobile Numerology Calculator</h1>
+                        <div class="form-group">
+                            <label>First Name *</label>
+                            <input type="text" id="firstName" value="${formData.firstName}">
+                        </div>
+                        <div class="form-group">
+                            <label>Middle Name</label>
+                            <input type="text" id="middleName" value="${formData.middleName}">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" id="lastName" value="${formData.lastName}">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <div class="grid">
+                                <div><input type="number" id="day" placeholder="Day" min="1" max="31" value="${formData.day}"></div>
+                                <div><input type="number" id="month" placeholder="Month" min="1" max="12" value="${formData.month}"></div>
+                                <div><input type="number" id="year" placeholder="Year" min="1900" value="${formData.year}"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile Number (10 digits) *</label>
+                            <input type="text" id="mobile" maxlength="10" value="${formData.mobileNumber}">
+                        </div>
+                        <button onclick="submitForm()" style="width: 100%; padding: 15px;">Calculate Now</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('firstName').oninput = (e) => formData.firstName = e.target.value;
+            document.getElementById('middleName').oninput = (e) => formData.middleName = e.target.value;
+            document.getElementById('lastName').oninput = (e) => formData.lastName = e.target.value;
+            document.getElementById('day').oninput = (e) => formData.day = e.target.value;
+            document.getElementById('month').oninput = (e) => formData.month = e.target.value;
+            document.getElementById('year').oninput = (e) => formData.year = e.target.value;
+            document.getElementById('mobile').oninput = (e) => formData.mobileNumber = e.target.value;
+        }
+
+        function submitForm() {
+            if (!formData.firstName || !formData.mobileNumber || !formData.day || !formData.month || !formData.year) {
+                alert('Please fill all required fields');
+                return;
+            }
+            results = calculate(formData);
+            renderResults();
+        }
+
+        function renderResults() {
+            const alphabets = numberToAlphabet[results.mobileSingleDigit] || [];
+            
+            // Check if any name matches with alphabets
+            const firstNameMatches = alphabets.some(letter => formData.firstName.toUpperCase().includes(letter));
+            const middleNameMatches = alphabets.some(letter => formData.middleName.toUpperCase().includes(letter));
+            const lastNameMatches = alphabets.some(letter => formData.lastName.toUpperCase().includes(letter));
+            const hasAnyMatch = firstNameMatches || middleNameMatches || lastNameMatches;
+            
+            app.innerHTML = `
+                <div class="results">
+                    <!-- PAGE 1 -->
+                    <div class="header">
+                        <h1>MOBILE No. SELECTION</h1>
+                        <p>Vedic Numerology</p>
+                    </div>
+
+                    <div class="info-grid">
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">Name</div>
+                                <table style="width: 100%; border: 1px solid #999; border-collapse: collapse; margin-bottom: 15px;">
+                                    <tbody>
+                                        <tr>
+                                            <td style="border: 1px solid #999; padding: 8px; font-weight: bold; background: #f0f0f0;">First Name</td>
+                                            <td style="border: 1px solid #999; padding: 8px;">${formData.firstName}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border: 1px solid #999; padding: 8px; font-weight: bold; background: #f0f0f0;">Middle Name</td>
+                                            <td style="border: 1px solid #999; padding: 8px;">${formData.middleName || '-'}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="border: 1px solid #999; padding: 8px; font-weight: bold; background: #f0f0f0;">Last Name</td>
+                                            <td style="border: 1px solid #999; padding: 8px;">${formData.lastName || '-'}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">DOB</div>
+                                <div class="info-value">${formData.day} ${formData.month} ${formData.year}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Age (Running Year)</div>
+                                <div class="info-value">${results.age}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">Personality No. (PN)</div>
+                                <div style="font-size: 24px; font-weight: bold;">${results.pn}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Destiny No. (DN)</div>
+                                <div style="font-size: 24px; font-weight: bold;">${results.dn}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Mobile Number</div>
+                                <div class="info-value">${formData.mobileNumber}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>Step-1- Pairing</h2>
+                        <p style="font-size: 12px; font-weight: bold; color: #666; margin-bottom: 10px;">Mobile No. After "0" Conversion if any</p>
+                        <p style="margin-bottom: 15px;">${results.processedMobile}</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Serial No.</th>
+                                    <th>Pairing</th>
+                                    <th>Compatibility</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${results.pairings.map(p => `
+                                    <tr>
+                                        <td>${p.pairNum}</td>
+                                        <td>${p.pair}</td>
+                                        <td>${p.compatibility}</td>
+                                        <td class="text-right">${p.points}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <p style="font-weight: bold;">Total Points (Step-1) <span style="float: right;">${results.step1Points}</span></p>
+                    </div>
+
+                    <div class="section">
+                        <h2>Step-2 - Compound of Mobile No. Total</h2>
+                        <p style="font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px;">Compound (From Actual Mobile No. Total)</p>
+                        <p style="margin-bottom: 15px;">${results.mobileTotal}</p>
+                        <p style="font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px;">Compatibility Between Compound ( ${results.digit1} and ${results.digit2} )</p>
+                        <p style="margin-bottom: 15px;">${results.compoundCompat}</p>
+                        <p style="font-weight: bold;">Points (Step-2) <span style="float: right;">${results.step2Points}</span></p>
+                    </div>
+
+                    <div class="section">
+                        <h2>Step-3 - Single Digit Total to PN/DN</h2>
+                        <p style="font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px;">Compound</p>
+                        <p style="margin-bottom: 15px;">${results.mobileTotal}</p>
+                        <p style="font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px;">Compound Totaling to Single Digit ( ${results.digit1} + ${results.digit2} )</p>
+                        <p style="margin-bottom: 15px;">${results.mobileSingleDigit}</p>
+                        <p style="font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px;">PN/DN (Age <=35 - PN / >35 - DN)</p>
+                        <p style="margin-bottom: 15px;">${results.pnDnToUse}</p>
+                        <p style="font-size: 12px; font-weight: bold; color: #666; margin-bottom: 5px;">Compatibility (Total to PN/DN)</p>
+                        <p style="margin-bottom: 15px;">${results.finalCompat}</p>
+                        <p style="font-weight: bold;">Points (Step-3) <span style="float: right;">${results.step3Points}</span></p>
+                    </div>
+
+                    <div class="section" style="border-bottom: none;">
+                        <p style="font-weight: bold; font-size: 16px;">Grand Total (All 3 Steps) <span style="float: right;">${results.totalPoints}</span></p>
+                        <p class="recommendation ${results.totalPoints >= 75 ? 'good' : 'bad'}">${results.recommendation}</p>
+                    </div>
+
+                    <!-- PAGE 2 -->
+                    <div class="page-break"></div>
+
+                    <div class="header">
+                        <h1>MOBILE No. SELECTION</h1>
+                        <p>Vedic Numerology</p>
+                    </div>
+
+                    <h2 style="margin-bottom: 20px;">Name Number Calculation - Chaldean Chart</h2>
+
+                    <table class="name-table">
+                        <tbody>
+                            <tr class="name-table-header">
+                                <td style="border: 1px solid #999; padding: 10px; font-weight: bold;">First Name</td>
+                                <td style="border: 1px solid #999; padding: 10px; font-weight: bold;">Middle Name</td>
+                                <td style="border: 1px solid #999; padding: 10px; font-weight: bold;">Last Name</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #999; padding: 10px;">${formData.firstName}</td>
+                                <td style="border: 1px solid #999; padding: 10px;">${formData.middleName || '-'}</td>
+                                <td style="border: 1px solid #999; padding: 10px;">${formData.lastName || '-'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px;">
+                        <div style="border: 1px solid #999; padding: 10px;">
+                            <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">First Name</p>
+                            <p style="margin-bottom: 8px;">${formData.firstName}</p>
+                            <div style="margin-bottom: 8px;">
+                                ${formData.firstName.toUpperCase().split('').map(c => `<div class="letter-box">${c}</div>`).join('')}
+                            </div>
+                            <div style="margin-bottom: 8px;">
+                                ${formData.firstName.toUpperCase().split('').map(c => `<div class="letter-box yellow-bg">${chaldeanMap[c] || ''}</div>`).join('')}
+                            </div>
+                            <p style="font-size: 11px; font-weight: bold;">Total: ${results.firstNameNum}</p>
+                        </div>
+                        ${formData.middleName ? `
+                            <div style="border: 1px solid #999; padding: 10px;">
+                                <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">Middle Name</p>
+                                <p style="margin-bottom: 8px;">${formData.middleName}</p>
+                                <div style="margin-bottom: 8px;">
+                                    ${formData.middleName.toUpperCase().split('').map(c => `<div class="letter-box">${c}</div>`).join('')}
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    ${formData.middleName.toUpperCase().split('').map(c => `<div class="letter-box yellow-bg">${chaldeanMap[c] || ''}</div>`).join('')}
+                                </div>
+                                <p style="font-size: 11px; font-weight: bold;">Total: ${results.middleNameNum}</p>
+                            </div>
+                        ` : ''}
+                        ${formData.lastName ? `
+                            <div style="border: 1px solid #999; padding: 10px;">
+                                <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px;">Last Name</p>
+                                <p style="margin-bottom: 8px;">${formData.lastName}</p>
+                                <div style="margin-bottom: 8px;">
+                                    ${formData.lastName.toUpperCase().split('').map(c => `<div class="letter-box">${c}</div>`).join('')}
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    ${formData.lastName.toUpperCase().split('').map(c => `<div class="letter-box yellow-bg">${chaldeanMap[c] || ''}</div>`).join('')}
+                                </div>
+                                <p style="font-size: 11px; font-weight: bold;">Total: ${results.lastNameNum}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <p style="font-weight: bold; margin-bottom: 30px;">Grand Total: ${results.totalNameNum}</p>
+
+                    <div class="section">
+                        <h2>Name Alphbets Matching with Single Digit of Mobile No. Total</h2>
+                        <table class="name-matching-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr class="yellow-bg">
+                                    <th colspan="${alphabets.length + 2}" style="text-align: left; border: 1px solid #999; padding: 10px; background: #b3d9ff;">Mobile No. Total (MNT) to SINGLE Digit ( ${results.mobileTotal} )</th>
+                                </tr>
+                                <tr class="yellow-bg">
+                                    <th colspan="${alphabets.length + 2}" style="text-align: center; border: 1px solid #999; padding: 10px; background: #b3d9ff;">${results.mobileTotal} ==> ${results.digit1} + ${results.digit2} = ${results.firstDigitSum}${results.showSecondStep ? ' ==> ' + Math.floor(results.firstDigitSum / 10) + ' + ' + (results.firstDigitSum % 10) + ' = ' + results.mobileSingleDigit : ''}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="yellow-bg">
+                                    <td style="font-weight: bold; border: 1px solid #999; padding: 10px; background: #ffff99;">Alphabets Associated With MNT ( ${results.mobileSingleDigit} )</td>
+                                    <td style="border: 1px solid #999; padding: 10px;"></td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; font-weight: bold; border: 1px solid #999; padding: 10px; background: #ffff99;">${letter}</td>`).join('')}
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; border: 1px solid #999; padding: 10px;">First Name</td>
+                                    <td style="font-weight: bold; border: 1px solid #999; padding: 10px;">${formData.firstName}</td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; border: 1px solid #999; padding: 10px;">${formData.firstName.toUpperCase().includes(letter) ? 'Yes' : '-'}</td>`).join('')}
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; border: 1px solid #999; padding: 10px;">Middle Name</td>
+                                    <td style="font-weight: bold; border: 1px solid #999; padding: 10px;">${formData.middleName || '-'}</td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; border: 1px solid #999; padding: 10px;">${formData.middleName.toUpperCase().includes(letter) ? 'Yes' : '-'}</td>`).join('')}
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: bold; border: 1px solid #999; padding: 10px;">Last Name</td>
+                                    <td style="font-weight: bold; border: 1px solid #999; padding: 10px;">${formData.lastName || '-'}</td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; border: 1px solid #999; padding: 10px;">${formData.lastName.toUpperCase().includes(letter) ? 'Yes' : '-'}</td>`).join('')}
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="text-align: center; background: ${hasAnyMatch ? '#90EE90' : '#FFB6C6'}; padding: 10px; font-weight: bold; margin-top: 15px; color: ${hasAnyMatch ? 'green' : 'red'};">${hasAnyMatch ? 'YES Matching With Name' : 'NO Not Matching With Name'}</p>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 50px;">
+                        <button onclick="renderForm()" style="width: auto; padding: 12px 30px;">Calculate Another Number</button>
+                        <button onclick="window.print()" style="width: auto; padding: 12px 30px; margin-left: 10px; background: #28a745;">Print Report</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        renderForm();
+    </script>
+</body>
+</html>
