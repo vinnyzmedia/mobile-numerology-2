@@ -1,8 +1,8 @@
 const CACHE_NAME = 'mobile-numerology-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '/mobile-numerology-2/',
+  '/mobile-numerology-2/index.html',
+  '/mobile-numerology-2/manifest.json'
 ];
 
 // Install Service Worker
@@ -58,4 +58,5 @@ self.addEventListener('fetch', event => {
         return new Response('Offline - Please check your connection');
       })
   );
+
 });
