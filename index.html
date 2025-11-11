@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Numerology Calculator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .form-container { 
+            background: white; 
+            padding: 40px; 
+            margin: 30px 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .form-container h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        label { 
+            display: block; 
+            font-weight: 700; 
+            margin-bottom: 8px; 
+            color: #333; 
+            font-size: 14px;
+        }
+        input { 
+            width: 100%; 
+            padding: 12px 15px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            font-size: 14px;
+            background: #f9f9f9;
+            transition: all 0.3s;
+        }
+        input:focus { 
+            outline: none; 
+            border-color: #667eea; 
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.3);
+            background: white;
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        button { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 14px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 16px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        .results { 
+            background: white; 
+            padding: 40px; 
+            margin: 20px; 
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .header { 
+            text-align: center; 
+            border-bottom: 3px solid #667eea; 
+            padding-bottom: 20px; 
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f0ff 100%);
+            border-radius: 10px;
+            padding: 25px;
+        }
+        .header h1 { 
+            font-size: 28px; 
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .header p { 
+            font-size: 14px; 
+            color: #666;
+            font-weight: 500;
+        }
+        .personal-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        .info-column > div {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .info-label { 
+            font-size: 11px; 
+            font-weight: 700; 
+            color: #999; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0;
+            margin-right: 15px;
+        }
+        .info-value { 
+            font-size: 14px;
+            font-weight: 700;
+            color: #333;
+            white-space: nowrap;
+        }
+        .info-value.large { 
+            font-size: 28px;
+            color: #667eea;
+        }
+        .name-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+        .name-table td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            font-size: 12px;
+        }
+        .name-table td:first-child {
+            font-weight: 700;
+            background: #f0f0f0;
+        }
+        .section { 
+            margin-bottom: 20px; 
+            padding-bottom: 15px; 
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .section h2 { 
+            font-size: 16px; 
+            font-weight: 700; 
+            margin-bottom: 8px;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 15px; 
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px 15px; 
+            text-align: left;
+            font-size: 13px;
+        }
+        th { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            font-weight: 700;
+            color: white;
+        }
+        tr:nth-child(even) { background: #f9f9f9; }
+        tr:hover { background: #f0f0ff; }
+        .text-right { text-align: right; }
+        .page-break { page-break-after: always; margin: 50px 0; }
+        .recommendation { 
+            font-size: 16px; 
+            font-weight: 700; 
+            margin-top: 15px; 
+            padding: 12px 15px; 
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        .good { 
+            color: #155724; 
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-color: #28a745;
+        }
+        .bad { 
+            color: #721c24; 
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c2c7 100%);
+            border-color: #dc3545;
+        }
+        .letter-box { 
+            width: 24px; 
+            height: 24px; 
+            border: 2px solid #667eea; 
+            display: inline-block; 
+            margin: 3px; 
+            text-align: center; 
+            line-height: 20px; 
+            font-weight: 700; 
+            font-size: 11px;
+            background: white;
+            border-radius: 4px;
+        }
+        .yellow-bg { 
+            background: linear-gradient(135deg, #fff9e6 0%, #ffff99 100%);
+            border-color: #ffd700;
+        }
+        .button-group {
+            text-align: center;
+            margin-top: 40px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .button-group button {
+            width: auto;
+            padding: 12px 30px;
+        }
+        .button-secondary {
+            background: #28a745;
+        }
+        .button-secondary:hover {
+            background: #218838;
+        }
+        @media print { 
+            body { 
+                margin: 0; 
+                padding: 0;
+                background: white;
+            } 
+            .form-container { display: none; } 
+            .button-group { display: none; }
+            button { display: none; } 
+            .section { page-break-inside: avoid; }
+            .page-break { page-break-before: always; }
+            .results {
+                box-shadow: none;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        const chaldeanMap = {
+            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'U': 6, 'O': 7, 'F': 8, 'I': 1,
+            'K': 2, 'G': 3, 'M': 4, 'H': 5, 'V': 6, 'Z': 7, 'P': 8, 'J': 1, 'R': 2,
+            'L': 3, 'T': 4, 'N': 5, 'W': 6, 'Q': 1, 'S': 3, 'X': 5, 'Y': 1
+        };
+
+        const numberToAlphabet = {
+            1: ['A', 'I', 'J', 'Q', 'Y'],
+            2: ['B', 'K', 'R'],
+            3: ['C', 'G', 'L', 'S'],
+            4: ['D', 'M', 'T'],
+            5: ['E', 'H', 'N', 'X'],
+            6: ['U', 'V', 'W'],
+            7: ['O', 'Z'],
+            8: ['F', 'P'],
+            9: ['O', 'Z']
+        };
+
+        const pairingCompatibility = {
+            '11': { comp: 'Good', pts: 5 }, '12': { comp: 'Good', pts: 5 }, '13': { comp: 'Bad', pts: 0 },
+            '14': { comp: 'Bad', pts: 0 }, '15': { comp: 'Good', pts: 5 }, '16': { comp: 'Bad', pts: 0 },
+            '17': { comp: 'Good', pts: 5 }, '18': { comp: 'Bad', pts: 0 }, '19': { comp: 'Good', pts: 5 },
+            '21': { comp: 'Exception', pts: 0 }, '22': { comp: 'Exception', pts: 0 }, '23': { comp: 'Bad', pts: 0 },
+            '24': { comp: 'Bad', pts: 0 }, '25': { comp: 'Good', pts: 5 }, '26': { comp: 'Bad', pts: 0 },
+            '27': { comp: 'Bad', pts: 0 }, '28': { comp: 'Bad', pts: 0 }, '29': { comp: 'Exception', pts: 0 },
+            '31': { comp: 'Good', pts: 5 }, '32': { comp: 'Bad', pts: 0 }, '33': { comp: 'Bad', pts: 0 },
+            '34': { comp: 'Bad', pts: 0 }, '35': { comp: 'Bad', pts: 0 }, '36': { comp: 'Good', pts: 5 },
+            '37': { comp: 'Good', pts: 5 }, '38': { comp: 'Good', pts: 5 }, '39': { comp: 'Exception', pts: 0 },
+            '41': { comp: 'Bad', pts: 0 }, '42': { comp: 'Bad', pts: 0 }, '43': { comp: 'Bad', pts: 0 },
+            '44': { comp: 'Bad', pts: 0 }, '45': { comp: 'Bad', pts: 0 }, '46': { comp: 'Bad', pts: 0 },
+            '47': { comp: 'Good', pts: 5 }, '48': { comp: 'Bad', pts: 0 }, '49': { comp: 'Exception', pts: 0 },
+            '51': { comp: 'Good', pts: 5 }, '52': { comp: 'Good', pts: 5 }, '53': { comp: 'Bad', pts: 0 },
+            '54': { comp: 'Bad', pts: 0 }, '55': { comp: 'Good', pts: 5 }, '56': { comp: 'Bad', pts: 0 },
+            '57': { comp: 'Good', pts: 5 }, '58': { comp: 'Bad', pts: 0 }, '59': { comp: 'Good', pts: 5 },
+            '61': { comp: 'Bad', pts: 0 }, '62': { comp: 'Bad', pts: 0 }, '63': { comp: 'Good', pts: 5 },
+            '64': { comp: 'Bad', pts: 0 }, '65': { comp: 'Bad', pts: 0 }, '66': { comp: 'Good', pts: 5 },
+            '67': { comp: 'Bad', pts: 0 }, '68': { comp: 'Exception', pts: 0 }, '69': { comp: 'Good', pts: 5 },
+            '71': { comp: 'Bad', pts: 0 }, '72': { comp: 'Bad', pts: 0 }, '73': { comp: 'Good', pts: 5 },
+            '74': { comp: 'Good', pts: 5 }, '75': { comp: 'Good', pts: 5 }, '76': { comp: 'Bad', pts: 0 },
+            '77': { comp: 'Good', pts: 5 }, '78': { comp: 'Exception', pts: 0 }, '79': { comp: 'Bad', pts: 0 },
+            '81': { comp: 'Bad', pts: 0 }, '82': { comp: 'Bad', pts: 0 }, '83': { comp: 'Good', pts: 5 },
+            '84': { comp: 'Bad', pts: 0 }, '85': { comp: 'Bad', pts: 0 }, '86': { comp: 'Good', pts: 5 },
+            '87': { comp: 'Exception', pts: 0 }, '88': { comp: 'Bad', pts: 0 }, '89': { comp: 'Good', pts: 5 },
+            '91': { comp: 'Good', pts: 5 }, '92': { comp: 'Exception', pts: 0 }, '93': { comp: 'Exception', pts: 0 },
+            '94': { comp: 'Exception', pts: 0 }, '95': { comp: 'Good', pts: 5 }, '96': { comp: 'Good', pts: 5 },
+            '97': { comp: 'Bad', pts: 0 }, '98': { comp: 'Good', pts: 5 }, '99': { comp: 'Good', pts: 5 }
+        };
+
+        const compoundDestinyMap = {
+            '11': { comp: 'Neutral' }, '12': { comp: 'Friend' }, '13': { comp: 'Friend' },
+            '14': { comp: 'Enemy' }, '15': { comp: 'Friend' }, '16': { comp: 'Enemy' },
+            '17': { comp: 'Neutral' }, '18': { comp: 'Enemy' }, '19': { comp: 'Friend' },
+            '21': { comp: 'Friend' }, '22': { comp: 'Friend' }, '23': { comp: 'Friend' },
+            '24': { comp: 'Enemy' }, '25': { comp: 'Friend' }, '26': { comp: 'Enemy' },
+            '27': { comp: 'Neutral' }, '28': { comp: 'Enemy' }, '29': { comp: 'Neutral' },
+            '31': { comp: 'Friend' }, '32': { comp: 'Friend' }, '33': { comp: 'Neutral' },
+            '34': { comp: 'Enemy' }, '35': { comp: 'Enemy' }, '36': { comp: 'Enemy' },
+            '37': { comp: 'Friend' }, '38': { comp: 'Friend' }, '39': { comp: 'Friend' },
+            '41': { comp: 'Neutral' }, '42': { comp: 'Enemy' }, '43': { comp: 'Enemy' },
+            '44': { comp: 'Neutral' }, '45': { comp: 'Friend' }, '46': { comp: 'Friend' },
+            '47': { comp: 'Friend' }, '48': { comp: 'Enemy' }, '49': { comp: 'Enemy' },
+            '51': { comp: 'Friend' }, '52': { comp: 'Enemy' }, '53': { comp: 'Neutral' },
+            '54': { comp: 'Friend' }, '55': { comp: 'Neutral' }, '56': { comp: 'Friend' },
+            '57': { comp: 'Neutral' }, '58': { comp: 'Neutral' }, '59': { comp: 'Enemy' },
+            '61': { comp: 'Enemy' }, '62': { comp: 'Enemy' }, '63': { comp: 'Enemy' },
+            '64': { comp: 'Friend' }, '65': { comp: 'Friend' }, '66': { comp: 'Neutral' },
+            '67': { comp: 'Friend' }, '68': { comp: 'Friend' }, '69': { comp: 'Neutral' },
+            '71': { comp: 'Enemy' }, '72': { comp: 'Enemy' }, '73': { comp: 'Friend' },
+            '74': { comp: 'Friend' }, '75': { comp: 'Neutral' }, '76': { comp: 'Friend' },
+            '77': { comp: 'Neutral' }, '78': { comp: 'Enemy' }, '79': { comp: 'Neutral' },
+            '81': { comp: 'Enemy' }, '82': { comp: 'Enemy' }, '83': { comp: 'Friend' },
+            '84': { comp: 'Enemy' }, '85': { comp: 'Friend' }, '86': { comp: 'Enemy' },
+            '87': { comp: 'Enemy' }, '88': { comp: 'Neutral' }, '89': { comp: 'Enemy' },
+            '91': { comp: 'Friend' }, '92': { comp: 'Neutral' }, '93': { comp: 'Friend' },
+            '94': { comp: 'Enemy' }, '95': { comp: 'Enemy' }, '96': { comp: 'Friend' },
+            '97': { comp: 'Neutral' }, '98': { comp: 'Enemy' }, '99': { comp: 'Neutral' }
+        };
+
+        function numberToSingleDigit(num) {
+            while (num >= 10) num = Math.floor(num / 10) + (num % 10);
+            return num;
+        }
+
+        function calculateNameNumber(name) {
+            return name.toUpperCase().split('').reduce((sum, char) => sum + (chaldeanMap[char] || 0), 0);
+        }
+
+        function getCompatibility(num1, num2) {
+            const key = '' + num1 + num2;
+            return pairingCompatibility[key] || { comp: 'Neutral', pts: 0 };
+        }
+
+        function convertMobileNumber(mobile) {
+            const digits = mobile.split('');
+            const result = [];
+            for (let i = 0; i < digits.length; i++) {
+                if (digits[i] === '0') {
+                    let found = false;
+                    for (let j = i - 1; j >= 0; j--) {
+                        if (digits[j] !== '0') {
+                            result.push(digits[j]);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) result.push('0');
+                } else {
+                    result.push(digits[i]);
+                }
+            }
+            return result.join('');
+        }
+
+        function calculate(data) {
+            const today = new Date();
+            const birthDate = new Date(data.year, data.month - 1, data.day);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+            age++;
+
+            const pn = numberToSingleDigit(parseInt(data.day));
+            const dn = numberToSingleDigit(parseInt(data.day) + parseInt(data.month) + parseInt(data.year));
+            
+            const mobileTotal = data.mobileNumber.split('').reduce((s, d) => s + parseInt(d), 0);
+            const mobileSingleDigit = numberToSingleDigit(mobileTotal);
+            const processedMobile = convertMobileNumber(data.mobileNumber);
+
+            const firstNameNum = calculateNameNumber(data.firstName);
+            const middleNameNum = calculateNameNumber(data.middleName);
+            const lastNameNum = calculateNameNumber(data.lastName);
+
+            let step1Points = 0;
+            const pairings = [];
+            for (let i = 0; i < processedMobile.length - 1; i++) {
+                const compat = getCompatibility(parseInt(processedMobile[i]), parseInt(processedMobile[i + 1]));
+                step1Points += compat.pts;
+                pairings.push({
+                    pairNum: i + 1,
+                    pair: processedMobile[i] + processedMobile[i + 1],
+                    compatibility: compat.comp,
+                    points: compat.pts
+                });
+            }
+
+            const digit1 = Math.floor(mobileTotal / 10);
+            const digit2 = mobileTotal % 10;
+            const compoundCompat = compoundDestinyMap['' + digit1 + digit2] || { comp: 'Neutral' };
+            const step2Points = (compoundCompat.comp === 'Friend' || compoundCompat.comp === 'Neutral') ? 30 : 0;
+
+            const pnDnToUse = age <= 35 ? pn : dn;
+            const finalCompat = compoundDestinyMap['' + mobileSingleDigit + pnDnToUse] || { comp: 'Neutral' };
+            const step3Points = (finalCompat.comp === 'Friend' || finalCompat.comp === 'Neutral') ? 25 : 0;
+
+            const totalPoints = step1Points + step2Points + step3Points;
+            const firstDigitSum = digit1 + digit2;
+            const showSecondStep = firstDigitSum >= 10;
+
+            return {
+                age, pn, dn, mobileTotal, mobileSingleDigit, processedMobile, digit1, digit2,
+                firstNameNum, middleNameNum, lastNameNum, totalNameNum: firstNameNum + middleNameNum + lastNameNum,
+                pairings, step1Points, compoundCompat: compoundCompat.comp, step2Points,
+                pnDnToUse, finalCompat: finalCompat.comp, step3Points, totalPoints, firstDigitSum, showSecondStep,
+                recommendation: totalPoints >= 75 ? 'MOBILE No. TO BE CONSIDERED (AS >= 75)' : 'MOBILE No. NOT TO BE CONSIDERED (AS < 75)'
+            };
+        }
+
+        const app = document.getElementById('app');
+        let results = null;
+        let formData = { firstName: '', middleName: '', lastName: '', day: '', month: '', year: '', mobileNumber: '' };
+
+        function renderForm() {
+            app.innerHTML = `
+                <div class="container">
+                    <div class="form-container">
+                        <h1 style="text-align: center; margin-bottom: 30px;">📱 Mobile Numerology Calculator</h1>
+                        <div class="form-group">
+                            <label>First Name *</label>
+                            <input type="text" id="firstName" value="${formData.firstName}">
+                        </div>
+                        <div class="form-group">
+                            <label>Middle Name</label>
+                            <input type="text" id="middleName" value="${formData.middleName}">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input type="text" id="lastName" value="${formData.lastName}">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <div class="grid">
+                                <div><input type="number" id="day" placeholder="Day" min="1" max="31" value="${formData.day}"></div>
+                                <div><input type="number" id="month" placeholder="Month" min="1" max="12" value="${formData.month}"></div>
+                                <div><input type="number" id="year" placeholder="Year" min="1900" value="${formData.year}"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Mobile Number (10 digits) *</label>
+                            <input type="text" id="mobile" maxlength="10" value="${formData.mobileNumber}">
+                        </div>
+                        <button onclick="submitForm()" style="width: 100%; padding: 16px; font-size: 17px;">📊 Calculate Now</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('firstName').oninput = (e) => formData.firstName = e.target.value;
+            document.getElementById('middleName').oninput = (e) => formData.middleName = e.target.value;
+            document.getElementById('lastName').oninput = (e) => formData.lastName = e.target.value;
+            document.getElementById('day').oninput = (e) => formData.day = e.target.value;
+            document.getElementById('month').oninput = (e) => formData.month = e.target.value;
+            document.getElementById('year').oninput = (e) => formData.year = e.target.value;
+            document.getElementById('mobile').oninput = (e) => formData.mobileNumber = e.target.value;
+        }
+
+        function submitForm() {
+            if (!formData.firstName || !formData.mobileNumber || !formData.day || !formData.month || !formData.year) {
+                alert('Please fill all required fields');
+                return;
+            }
+            results = calculate(formData);
+            renderResults();
+        }
+
+        function renderResults() {
+            const alphabets = numberToAlphabet[results.mobileSingleDigit] || [];
+            
+            const firstNameMatches = alphabets.some(letter => formData.firstName.toUpperCase().includes(letter));
+            const middleNameMatches = alphabets.some(letter => formData.middleName.toUpperCase().includes(letter));
+            const lastNameMatches = alphabets.some(letter => formData.lastName.toUpperCase().includes(letter));
+            const hasAnyMatch = firstNameMatches || middleNameMatches || lastNameMatches;
+            
+            app.innerHTML = `
+                <div class="results">
+                    <!-- PAGE 1 -->
+                    <div class="header">
+                        <h1>📱 MOBILE No. SELECTION</h1>
+                        <p>Vedic Numerology Analysis</p>
+                    </div>
+
+                    <!-- PERSONAL INFORMATION SECTION - 2x4 TABLE FORMAT -->
+                    <div class="personal-info">
+                        <div class="info-column" style="border-left: 4px solid #667eea; padding: 0;">
+                            <table class="name-table" style="width: 100%; border-collapse: collapse; margin: 0; border-left: none;">
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; width: 50%; font-size: 13px;">First Name</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${formData.firstName}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; font-size: 13px;">Middle Name</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${formData.middleName || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; font-size: 13px;">Last Name</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${formData.lastName || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; font-size: 13px;">Date of Birth</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${formData.day}/${formData.month}/${formData.year}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="info-column" style="border-left: 4px solid #667eea; padding: 0;">
+                            <table class="name-table" style="width: 100%; border-collapse: collapse; margin: 0; border-left: none;">
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; width: 50%; font-size: 13px;">Personality No. (PN)</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${results.pn}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; font-size: 13px;">Destiny No. (DN)</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${results.dn}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; font-size: 13px;">Mobile Number</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${formData.mobileNumber}</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-weight: 700; background: #f0f0f0; font-size: 13px;">Age (Running Age)</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; font-size: 16px; font-weight: 700; color: #667eea; text-align: center; width: 50%;">${results.age} Years</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1 -->
+                    <div class="section">
+                        <h2>Step-1: Pairing Analysis</h2>
+                        <table style="width: 100%; border: none; margin-bottom: 12px; font-size: 12px;">
+                            <tr style="border: none;">
+                                <td style="border: none; padding: 0; font-size: 11px; font-weight: 700; color: #666;">Mobile No. After "0" Conversion if any</td>
+                                <td style="border: none; padding: 0; text-align: right; font-size: 14px; font-weight: 700; letter-spacing: 2px;">${results.processedMobile}</td>
+                            </tr>
+                        </table>
+                        <table style="font-size: 12px;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 8px 10px;">Serial No.</th>
+                                    <th style="padding: 8px 10px;">Pairing</th>
+                                    <th style="padding: 8px 10px;">Compatibility</th>
+                                    <th style="padding: 8px 10px;">Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${results.pairings.map(p => `
+                                    <tr>
+                                        <td style="padding: 6px 10px;">${p.pairNum}</td>
+                                        <td style="padding: 6px 10px;">${p.pair}</td>
+                                        <td style="padding: 6px 10px;">${p.compatibility}</td>
+                                        <td style="padding: 6px 10px; text-align: right;">${p.points}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <p style="font-weight: 700; text-align: right; color: #667eea; margin-top: 8px;">Total Points (Step-1): <strong>${results.step1Points}</strong></p>
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div class="section" style="margin-bottom: 20px; padding-bottom: 15px;">
+                        <h2 style="margin-bottom: 8px;">Step-2: Compound of Mobile No. Total</h2>
+                        <table style="width: 100%; border: none; margin-bottom: 8px; font-size: 12px;">
+                            <tr style="border: none;">
+                                <td style="border: none; padding: 3px 0; font-weight: 700; color: #666;">Compound (From Actual Mobile No. Total)</td>
+                                <td style="border: none; padding: 3px 0; text-align: right; font-weight: 700;">${results.mobileTotal}</td>
+                            </tr>
+                            <tr style="border: none;">
+                                <td style="border: none; padding: 3px 0; font-weight: 700; color: #666;">Compatibility Between Compound (${results.digit1} and ${results.digit2})</td>
+                                <td style="border: none; padding: 3px 0; text-align: right; font-weight: 700; color: #667eea;">${results.compoundCompat}</td>
+                            </tr>
+                        </table>
+                        <p style="font-weight: 700; text-align: right; color: #667eea; margin-top: 5px;">Points (Step-2): <strong>${results.step2Points}</strong></p>
+                    </div>
+
+                    <!-- STEP 3 -->
+                    <div class="section" style="margin-bottom: 20px; padding-bottom: 15px;">
+                        <h2 style="margin-bottom: 8px;">Step-3: Single Digit Total to PN/DN</h2>
+                        <table style="width: 100%; border: none; margin-bottom: 8px; font-size: 12px;">
+                            <tr style="border: none;">
+                                <td style="border: none; padding: 3px 0; font-weight: 700; color: #666;">Compound</td>
+                                <td style="border: none; padding: 3px 0; text-align: right; font-weight: 700;">${results.mobileTotal}</td>
+                            </tr>
+                            <tr style="border: none;">
+                                <td style="border: none; padding: 3px 0; font-weight: 700; color: #666;">Compound Totaling to Single Digit (${results.digit1} + ${results.digit2})</td>
+                                <td style="border: none; padding: 3px 0; text-align: right; font-weight: 700;">${results.mobileSingleDigit}</td>
+                            </tr>
+                            <tr style="border: none;">
+                                <td style="border: none; padding: 3px 0; font-weight: 700; color: #666;">PN/DN (Age <=35 - PN / >35 - DN)</td>
+                                <td style="border: none; padding: 3px 0; text-align: right; font-weight: 700;">${results.pnDnToUse}</td>
+                            </tr>
+                            <tr style="border: none;">
+                                <td style="border: none; padding: 3px 0; font-weight: 700; color: #666;">Compatibility (Total to PN/DN)</td>
+                                <td style="border: none; padding: 3px 0; text-align: right; font-weight: 700; color: #667eea;">${results.finalCompat}</td>
+                            </tr>
+                        </table>
+                        <p style="font-weight: 700; text-align: right; color: #667eea; margin-top: 5px;">Points (Step-3): <strong>${results.step3Points}</strong></p>
+                    </div>
+
+                    <!-- GRAND TOTAL -->
+                    <div class="section" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                        <table style="width: 100%; border: none; margin-bottom: 8px;">
+                            <tr style="border: none;"><td style="border: none; padding: 5px 0; font-weight: 700; font-size: 14px;">Grand Total (All 3 Steps)</td><td style="border: none; padding: 5px 0; text-align: right; color: #667eea; font-size: 16px; font-weight: 700;">${results.totalPoints}</td></tr>
+                        </table>
+                        <p class="recommendation ${results.totalPoints >= 75 ? 'good' : 'bad'}" style="margin: 0;">${results.recommendation}</p>
+                    </div>
+
+                    <!-- PAGE 2 -->
+                    <div class="page-break"></div>
+
+                    <div class="header">
+                        <h1>📱 MOBILE No. SELECTION</h1>
+                        <p>Vedic Numerology Analysis</p>
+                    </div>
+
+                    <h2 style="margin-bottom: 25px; color: #667eea; text-transform: uppercase; letter-spacing: 0.5px;">Name Number Calculation - Chaldean Chart</h2>
+
+                    <table class="name-table">
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 700; color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">First Name</td>
+                                <td style="font-weight: 700; color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">Middle Name</td>
+                                <td style="font-weight: 700; color: white; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">Last Name</td>
+                            </tr>
+                            <tr>
+                                <td>${formData.firstName}</td>
+                                <td>${formData.middleName || '-'}</td>
+                                <td>${formData.lastName || '-'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px;">
+                        <div style="border: 2px solid #667eea; padding: 15px; border-radius: 8px; background: #f9f9f9;">
+                            <p style="font-size: 12px; font-weight: 700; margin-bottom: 10px; color: #667eea;">FIRST NAME</p>
+                            <p style="margin-bottom: 10px; font-weight: 700;">${formData.firstName}</p>
+                            <div style="margin-bottom: 10px;">
+                                ${formData.firstName.toUpperCase().split('').map(c => `<div class="letter-box">${c}</div>`).join('')}
+                            </div>
+                            <div style="margin-bottom: 10px;">
+                                ${formData.firstName.toUpperCase().split('').map(c => `<div class="letter-box yellow-bg">${chaldeanMap[c] || ''}</div>`).join('')}
+                            </div>
+                            <p style="font-size: 12px; font-weight: 700; padding-top: 10px; border-top: 2px solid #ddd;">Total: <strong style="color: #667eea; font-size: 14px;">${results.firstNameNum}</strong></p>
+                        </div>
+                        ${formData.middleName ? `
+                            <div style="border: 2px solid #667eea; padding: 15px; border-radius: 8px; background: #f9f9f9;">
+                                <p style="font-size: 12px; font-weight: 700; margin-bottom: 10px; color: #667eea;">MIDDLE NAME</p>
+                                <p style="margin-bottom: 10px; font-weight: 700;">${formData.middleName}</p>
+                                <div style="margin-bottom: 10px;">
+                                    ${formData.middleName.toUpperCase().split('').map(c => `<div class="letter-box">${c}</div>`).join('')}
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    ${formData.middleName.toUpperCase().split('').map(c => `<div class="letter-box yellow-bg">${chaldeanMap[c] || ''}</div>`).join('')}
+                                </div>
+                                <p style="font-size: 12px; font-weight: 700; padding-top: 10px; border-top: 2px solid #ddd;">Total: <strong style="color: #667eea; font-size: 14px;">${results.middleNameNum}</strong></p>
+                            </div>
+                        ` : ''}
+                        ${formData.lastName ? `
+                            <div style="border: 2px solid #667eea; padding: 15px; border-radius: 8px; background: #f9f9f9;">
+                                <p style="font-size: 12px; font-weight: 700; margin-bottom: 10px; color: #667eea;">LAST NAME</p>
+                                <p style="margin-bottom: 10px; font-weight: 700;">${formData.lastName}</p>
+                                <div style="margin-bottom: 10px;">
+                                    ${formData.lastName.toUpperCase().split('').map(c => `<div class="letter-box">${c}</div>`).join('')}
+                                </div>
+                                <div style="margin-bottom: 10px;">
+                                    ${formData.lastName.toUpperCase().split('').map(c => `<div class="letter-box yellow-bg">${chaldeanMap[c] || ''}</div>`).join('')}
+                                </div>
+                                <p style="font-size: 12px; font-weight: 700; padding-top: 10px; border-top: 2px solid #ddd;">Total: <strong style="color: #667eea; font-size: 14px;">${results.lastNameNum}</strong></p>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <p style="font-weight: 700; margin-bottom: 30px; font-size: 16px; color: #333;">Grand Total: <strong style="color: #667eea;">${results.totalNameNum}</strong></p>
+
+                    <div class="section">
+                        <h2>Name Alphabets Matching with Single Digit of Mobile No. Total</h2>
+                        <table class="name-matching-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left; border: 1px solid #ddd; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 700; width: 50%;">Mobile No. Total (MNT) to SINGLE Digit</th>
+                                    <th colspan="${alphabets.length + 1}" style="text-align: center; border: 1px solid #ddd; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: 700; width: 50%;">${results.mobileTotal} ==> ${results.digit1} + ${results.digit2} = ${results.firstDigitSum}${results.showSecondStep ? ' ==> ' + Math.floor(results.firstDigitSum / 10) + ' + ' + (results.firstDigitSum % 10) + ' = ' + results.mobileSingleDigit : ' ==> ' + results.mobileSingleDigit}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="background: #ffff99;">
+                                    <td style="font-weight: 700; border: 1px solid #ddd; padding: 10px; background: #ffff99; text-align: left;">Alphabets Associated With MNT (${results.mobileSingleDigit})</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; background: #ffff99;"></td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; font-weight: 700; border: 1px solid #ddd; padding: 10px; background: #ffff99;">${letter}</td>`).join('')}
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700; border: 1px solid #ddd; padding: 10px; text-align: left; background: #f0f0f0; width: 30%;">First Name</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center; width: 20%;">${formData.firstName}</td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; border: 1px solid #ddd; padding: 10px; background: ${formData.firstName.toUpperCase().includes(letter) ? '#d4edda' : '#fff'}">${formData.firstName.toUpperCase().includes(letter) ? '✓\nYes' : '-'}</td>`).join('')}
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700; border: 1px solid #ddd; padding: 10px; text-align: left; background: #f0f0f0;">Middle Name</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">${formData.middleName || '-'}</td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; border: 1px solid #ddd; padding: 10px; background: ${formData.middleName.toUpperCase().includes(letter) ? '#d4edda' : '#fff'}">${formData.middleName.toUpperCase().includes(letter) ? '✓\nYes' : '-'}</td>`).join('')}
+                                </tr>
+                                <tr>
+                                    <td style="font-weight: 700; border: 1px solid #ddd; padding: 10px; text-align: left; background: #f0f0f0;">Last Name</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">${formData.lastName || '-'}</td>
+                                    ${alphabets.map(letter => `<td style="text-align: center; border: 1px solid #ddd; padding: 10px; background: ${formData.lastName.toUpperCase().includes(letter) ? '#d4edda' : '#fff'}">${formData.lastName.toUpperCase().includes(letter) ? '✓\nYes' : '-'}</td>`).join('')}
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="text-align: center; background: ${hasAnyMatch ? 'linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)' : 'linear-gradient(135deg, #f8d7da 0%, #f5c2c7 100%)'}; padding: 12px; font-weight: 700; margin-top: 15px; border-radius: 8px; color: ${hasAnyMatch ? '#155724' : '#721c24'}; border: 2px solid ${hasAnyMatch ? '#28a745' : '#dc3545'};">${hasAnyMatch ? '✅ YES - Matching With Name' : '❌ NO - Not Matching With Name'}</p>
+                    </div>
+
+                    <div class="button-group">
+                        <button onclick="renderForm()">🔄 Calculate Another</button>
+                        <button class="button-secondary" onclick="window.print()">🖨️ Print Report</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        renderForm();
+    </script>
+</body>
+</html>
