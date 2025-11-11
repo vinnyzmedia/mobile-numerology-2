@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Numerology Calculator</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .form-container { background: white; padding: 40px; margin: 30px 20px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+        .form-container h1 { background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; color: #333; }
+        input { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 12px rgba(102, 126, 234, 0.3); }
+        .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 16px; width: 100%; }
+        button:hover { transform: translateY(-2px); }
+        .results { background: white; padding: 30px; margin: 20px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+        .header { text-align: center; padding: 20px 0; margin-bottom: 25px; border-bottom: 3px solid #333; }
+        .header h1 { font-size: 28px; font-weight: 700; color: #333; margin-bottom: 5px; }
+        .header p { font-size: 14px; color: #666; }
+        .personal-info { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 25px; }
+        .info-left { background: #f5f5f5; padding: 15px; border-radius: 8px; }
+        .info-right { background: #f5f5f5; padding: 15px; border-radius: 8px; }
+        .name-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .name-table td { border: 1px solid #ddd; padding: 12px; font-size: 14px; }
+        .name-table td:first-child { background: #e8e8e8; font-weight: 700; width: 40%; }
+        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #ddd; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { font-weight: 700; color: #333; font-size: 13px; }
+        .info-value { font-size: 13px; color: #333; }
+        .info-pn, .info-dn { font-size: 24px; color: #667eea; font-weight: 700; }
+        .section { margin-bottom: 20px; padding-bottom: 15px; }
+        .section h2 { font-size: 16px; font-weight: 700; color: #333; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #ddd; }
+        th { background: #667eea; color: white; font-weight: 700; padding: 12px; text-align: left; font-size: 13px; border: 1px solid #ddd; }
+        td { border: 1px solid #ddd; padding: 12px; font-size: 13px; }
+        tr:nth-child(even) { background: #f9f9f9; }
+        .text-right { text-align: right; }
+        .recommendation { font-size: 16px; font-weight: 700; margin-top: 15px; padding: 12px 15px; border-radius: 8px; text-align: center; border: 2px solid; }
+        .good { color: #155724; background: #d4edda; border-color: #28a745; }
+        .bad { color: #721c24; background: #f8d7da; border-color: #dc3545; }
+        .button-group { text-align: center; margin-top: 30px; display: flex; gap: 15px; justify-content: center; }
+        .button-group button { width: auto; padding: 12px 30px; }
+        .button-secondary { background: #28a745; }
+        .yellow-header { background: #ffff99; font-weight: 700; }
+        .letter-box { width: 30px; height: 30px; border: 1px solid #333; display: inline-block; margin: 3px; text-align: center; line-height: 30px; font-weight: 700; font-size: 12px; background: white; }
+        .chaldean-box { display: inline-block; margin: 8px 10px; text-align: center; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: #f9f9f9; min-width: 120px; }
+        .chaldean-letter { display: flex; gap: 2px; margin-bottom: 8px; }
+        .chaldean-number { display: flex; gap: 2px; margin-bottom: 8px; }
+        .letter-sq { width: 25px; height: 25px; border: 1px solid #333; text-align: center; line-height: 25px; font-weight: 700; font-size: 11px; }
+        .yellow-sq { background: #ffff99; }
+        @media print { .form-container { display: none; } .button-group { display: none; } }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    <script>
+        const chaldeanMap = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'U': 6, 'O': 7, 'F': 8, 'I': 1, 'K': 2, 'G': 3, 'M': 4, 'H': 5, 'V': 6, 'Z': 7, 'P': 8, 'J': 1, 'R': 2, 'L': 3, 'T': 4, 'N': 5, 'W': 6, 'Q': 1, 'S': 3, 'X': 5, 'Y': 1};
+        const numberToAlphabet = {1: ['A', 'I', 'J', 'Q', 'Y'], 2: ['B', 'K', 'R'], 3: ['C', 'G', 'L', 'S'], 4: ['D', 'M', 'T'], 5: ['E', 'H', 'N', 'X'], 6: ['U', 'V', 'W'], 7: ['O', 'Z'], 8: ['F', 'P'], 9: ['O', 'Z']};
+        const pairingCompatibility = {'11': {comp: 'Good', pts: 5}, '12': {comp: 'Good', pts: 5}, '13': {comp: 'Bad', pts: 0}, '14': {comp: 'Bad', pts: 0}, '15': {comp: 'Good', pts: 5}, '16': {comp: 'Bad', pts: 0}, '17': {comp: 'Good', pts: 5}, '18': {comp: 'Bad', pts: 0}, '19': {comp: 'Good', pts: 5}, '21': {comp: 'Exception', pts: 0}, '22': {comp: 'Exception', pts: 0}, '23': {comp: 'Bad', pts: 0}, '24': {comp: 'Bad', pts: 0}, '25': {comp: 'Good', pts: 5}, '26': {comp: 'Bad', pts: 0}, '27': {comp: 'Bad', pts: 0}, '28': {comp: 'Bad', pts: 0}, '29': {comp: 'Exception', pts: 0}, '31': {comp: 'Good', pts: 5}, '32': {comp: 'Bad', pts: 0}, '33': {comp: 'Bad', pts: 0}, '34': {comp: 'Bad', pts: 0}, '35': {comp: 'Bad', pts: 0}, '36': {comp: 'Good', pts: 5}, '37': {comp: 'Good', pts: 5}, '38': {comp: 'Good', pts: 5}, '39': {comp: 'Exception', pts: 0}, '41': {comp: 'Bad', pts: 0}, '42': {comp: 'Bad', pts: 0}, '43': {comp: 'Bad', pts: 0}, '44': {comp: 'Bad', pts: 0}, '45': {comp: 'Bad', pts: 0}, '46': {comp: 'Bad', pts: 0}, '47': {comp: 'Good', pts: 5}, '48': {comp: 'Bad', pts: 0}, '49': {comp: 'Exception', pts: 0}, '51': {comp: 'Good', pts: 5}, '52': {comp: 'Good', pts: 5}, '53': {comp: 'Bad', pts: 0}, '54': {comp: 'Bad', pts: 0}, '55': {comp: 'Good', pts: 5}, '56': {comp: 'Bad', pts: 0}, '57': {comp: 'Good', pts: 5}, '58': {comp: 'Bad', pts: 0}, '59': {comp: 'Good', pts: 5}, '61': {comp: 'Bad', pts: 0}, '62': {comp: 'Bad', pts: 0}, '63': {comp: 'Good', pts: 5}, '64': {comp: 'Bad', pts: 0}, '65': {comp: 'Bad', pts: 0}, '66': {comp: 'Good', pts: 5}, '67': {comp: 'Bad', pts: 0}, '68': {comp: 'Exception', pts: 0}, '69': {comp: 'Good', pts: 5}, '71': {comp: 'Bad', pts: 0}, '72': {comp: 'Bad', pts: 0}, '73': {comp: 'Good', pts: 5}, '74': {comp: 'Good', pts: 5}, '75': {comp: 'Good', pts: 5}, '76': {comp: 'Bad', pts: 0}, '77': {comp: 'Good', pts: 5}, '78': {comp: 'Exception', pts: 0}, '79': {comp: 'Bad', pts: 0}, '81': {comp: 'Bad', pts: 0}, '82': {comp: 'Bad', pts: 0}, '83': {comp: 'Good', pts: 5}, '84': {comp: 'Bad', pts: 0}, '85': {comp: 'Bad', pts: 0}, '86': {comp: 'Good', pts: 5}, '87': {comp: 'Exception', pts: 0}, '88': {comp: 'Bad', pts: 0}, '89': {comp: 'Good', pts: 5}, '91': {comp: 'Good', pts: 5}, '92': {comp: 'Exception', pts: 0}, '93': {comp: 'Exception', pts: 0}, '94': {comp: 'Exception', pts: 0}, '95': {comp: 'Good', pts: 5}, '96': {comp: 'Good', pts: 5}, '97': {comp: 'Bad', pts: 0}, '98': {comp: 'Good', pts: 5}, '99': {comp: 'Good', pts: 5}};
+        const compoundDestinyMap = {'11': {comp: 'Neutral'}, '12': {comp: 'Friend'}, '13': {comp: 'Friend'}, '14': {comp: 'Enemy'}, '15': {comp: 'Friend'}, '16': {comp: 'Enemy'}, '17': {comp: 'Neutral'}, '18': {comp: 'Enemy'}, '19': {comp: 'Friend'}, '21': {comp: 'Friend'}, '22': {comp: 'Friend'}, '23': {comp: 'Friend'}, '24': {comp: 'Enemy'}, '25': {comp: 'Friend'}, '26': {comp: 'Enemy'}, '27': {comp: 'Neutral'}, '28': {comp: 'Enemy'}, '29': {comp: 'Neutral'}, '31': {comp: 'Friend'}, '32': {comp: 'Friend'}, '33': {comp: 'Neutral'}, '34': {comp: 'Enemy'}, '35': {comp: 'Enemy'}, '36': {comp: 'Enemy'}, '37': {comp: 'Friend'}, '38': {comp: 'Friend'}, '39': {comp: 'Friend'}, '41': {comp: 'Neutral'}, '42': {comp: 'Enemy'}, '43': {comp: 'Enemy'}, '44': {comp: 'Neutral'}, '45': {comp: 'Friend'}, '46': {comp: 'Friend'}, '47': {comp: 'Friend'}, '48': {comp: 'Enemy'}, '49': {comp: 'Enemy'}, '51': {comp: 'Friend'}, '52': {comp: 'Enemy'}, '53': {comp: 'Neutral'}, '54': {comp: 'Friend'}, '55': {comp: 'Neutral'}, '56': {comp: 'Friend'}, '57': {comp: 'Neutral'}, '58': {comp: 'Neutral'}, '59': {comp: 'Enemy'}, '61': {comp: 'Enemy'}, '62': {comp: 'Enemy'}, '63': {comp: 'Enemy'}, '64': {comp: 'Friend'}, '65': {comp: 'Friend'}, '66': {comp: 'Neutral'}, '67': {comp: 'Friend'}, '68': {comp: 'Friend'}, '69': {comp: 'Neutral'}, '71': {comp: 'Enemy'}, '72': {comp: 'Enemy'}, '73': {comp: 'Friend'}, '74': {comp: 'Friend'}, '75': {comp: 'Neutral'}, '76': {comp: 'Friend'}, '77': {comp: 'Neutral'}, '78': {comp: 'Enemy'}, '79': {comp: 'Neutral'}, '81': {comp: 'Enemy'}, '82': {comp: 'Enemy'}, '83': {comp: 'Friend'}, '84': {comp: 'Enemy'}, '85': {comp: 'Friend'}, '86': {comp: 'Enemy'}, '87': {comp: 'Enemy'}, '88': {comp: 'Neutral'}, '89': {comp: 'Enemy'}, '91': {comp: 'Friend'}, '92': {comp: 'Neutral'}, '93': {comp: 'Friend'}, '94': {comp: 'Enemy'}, '95': {comp: 'Enemy'}, '96': {comp: 'Friend'}, '97': {comp: 'Neutral'}, '98': {comp: 'Enemy'}, '99': {comp: 'Neutral'}};
+
+        function numberToSingleDigit(num) { while (num >= 10) num = Math.floor(num / 10) + (num % 10); return num; }
+        function calculateNameNumber(name) { return name.toUpperCase().split('').reduce((sum, char) => sum + (chaldeanMap[char] || 0), 0); }
+        function getCompatibility(num1, num2) { return pairingCompatibility['' + num1 + num2] || {comp: 'Neutral', pts: 0}; }
+        function convertMobileNumber(mobile) { const digits = mobile.split(''); const result = []; for (let i = 0; i < digits.length; i++) { if (digits[i] === '0') { let found = false; for (let j = i - 1; j >= 0; j--) { if (digits[j] !== '0') { result.push(digits[j]); found = true; break; } } if (!found) result.push('0'); } else { result.push(digits[i]); } } return result.join(''); }
+
+        function calculate(data) {
+            const today = new Date();
+            const birthDate = new Date(data.year, data.month - 1, data.day);
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+            age++;
+
+            const pn = numberToSingleDigit(parseInt(data.day));
+            const dn = numberToSingleDigit(parseInt(data.day) + parseInt(data.month) + parseInt(data.year));
+            const mobileTotal = data.mobileNumber.split('').reduce((s, d) => s + parseInt(d), 0);
+            const mobileSingleDigit = numberToSingleDigit(mobileTotal);
+            const processedMobile = convertMobileNumber(data.mobileNumber);
+            const firstNameNum = calculateNameNumber(data.firstName);
+            const middleNameNum = calculateNameNumber(data.middleName);
+            const lastNameNum = calculateNameNumber(data.lastName);
+
+            let step1Points = 0;
+            const pairings = [];
+            for (let i = 0; i < processedMobile.length - 1; i++) {
+                const compat = getCompatibility(parseInt(processedMobile[i]), parseInt(processedMobile[i + 1]));
+                step1Points += compat.pts;
+                pairings.push({pairNum: i + 1, pair: processedMobile[i] + processedMobile[i + 1], compatibility: compat.comp, points: compat.pts});
+            }
+
+            const digit1 = Math.floor(mobileTotal / 10);
+            const digit2 = mobileTotal % 10;
+            const compoundCompat = compoundDestinyMap['' + digit1 + digit2] || {comp: 'Neutral'};
+            const step2Points = (compoundCompat.comp === 'Friend' || compoundCompat.comp === 'Neutral') ? 30 : 0;
+            const pnDnToUse = age <= 35 ? pn : dn;
+            const finalCompat = compoundDestinyMap['' + mobileSingleDigit + pnDnToUse] || {comp: 'Neutral'};
+            const step3Points = (finalCompat.comp === 'Friend' || finalCompat.comp === 'Neutral') ? 25 : 0;
+            const totalPoints = step1Points + step2Points + step3Points;
+
+            return {age, pn, dn, mobileTotal, mobileSingleDigit, processedMobile, digit1, digit2, firstNameNum, middleNameNum, lastNameNum, totalNameNum: firstNameNum + middleNameNum + lastNameNum, pairings, step1Points, compoundCompat: compoundCompat.comp, step2Points, pnDnToUse, finalCompat: finalCompat.comp, step3Points, totalPoints, recommendation: totalPoints >= 75 ? 'MOBILE No. TO BE CONSIDERED (AS >= 75)' : 'MOBILE No. NOT TO BE CONSIDERED (AS < 75)'};
+        }
+
+        const app = document.getElementById('app');
+        let results = null;
+        let formData = {firstName: '', middleName: '', lastName: '', day: '', month: '', year: '', mobileNumber: ''};
+
+        function renderForm() {
+            app.innerHTML = `<div class="container"><div class="form-container"><h1>📱 Mobile Numerology Calculator</h1><div class="form-group"><label>First Name *</label><input type="text" id="firstName" value="${formData.firstName}"></div><div class="form-group"><label>Middle Name</label><input type="text" id="middleName" value="${formData.middleName}"></div><div class="form-group"><label>Last Name</label><input type="text" id="lastName" value="${formData.lastName}"></div><div class="form-group"><label>Date of Birth</label><div class="grid"><div><input type="number" id="day" placeholder="Day" min="1" max="31" value="${formData.day}"></div><div><input type="number" id="month" placeholder="Month" min="1" max="12" value="${formData.month}"></div><div><input type="number" id="year" placeholder="Year" min="1900" value="${formData.year}"></div></div></div><div class="form-group"><label>Mobile Number (10 digits) *</label><input type="text" id="mobile" maxlength="10" value="${formData.mobileNumber}"></div><button onclick="submitForm()">📊 Calculate Now</button></div></div>`;
+            document.getElementById('firstName').oninput = (e) => formData.firstName = e.target.value;
+            document.getElementById('middleName').oninput = (e) => formData.middleName = e.target.value;
+            document.getElementById('lastName').oninput = (e) => formData.lastName = e.target.value;
+            document.getElementById('day').oninput = (e) => formData.day = e.target.value;
+            document.getElementById('month').oninput = (e) => formData.month = e.target.value;
+            document.getElementById('year').oninput = (e) => formData.year = e.target.value;
+            document.getElementById('mobile').oninput = (e) => formData.mobileNumber = e.target.value;
+        }
+
+        function submitForm() {
+            if (!formData.firstName || !formData.mobileNumber || !formData.day || !formData.month || !formData.year) {
+                alert('Please fill all required fields');
+                return;
+            }
+            results = calculate(formData);
+            renderResults();
+        }
+
+        function renderResults() {
+            const alphabets = numberToAlphabet[results.mobileSingleDigit] || [];
+            const hasMatch = alphabets.some(l => formData.firstName.toUpperCase().includes(l)) || alphabets.some(l => formData.middleName.toUpperCase().includes(l)) || alphabets.some(l => formData.lastName.toUpperCase().includes(l));
+            
+            let html = `<div class="results"><div class="header"><h1>📱 MOBILE No. SELECTION</h1><p>Vedic Numerology</p></div><div class="personal-info"><div class="info-left"><div style="font-weight: 700; margin-bottom: 10px;">Name</div><table class="name-table"><tr><td>First Name</td><td>${formData.firstName}</td></tr><tr><td>Middle Name</td><td>${formData.middleName || '-'}</td></tr><tr><td>Last Name</td><td>${formData.lastName || '-'}</td></tr></table><div class="info-row"><span class="info-label">DOB</span><span class="info-value">${formData.day} 8 ${formData.year}</span></div><div class="info-row"><span class="info-label">Age (Running Year)</span><span class="info-value">${results.age}</span></div></div><div class="info-right"><div class="info-row"><span class="info-label">Personality No. (PN)</span><span class="info-pn">${results.pn}</span></div><div class="info-row"><span class="info-label">Destiny No. (DN)</span><span class="info-dn">${results.dn}</span></div><div class="info-row"><span class="info-label">Mobile Number</span><span class="info-value">${formData.mobileNumber}</span></div></div></div><div class="section"><h2>STEP-1: PAIRING ANALYSIS</h2><p style="margin-bottom: 10px;"><strong>Mobile No. After "0" Conversion if any</strong></p><p style="margin-bottom: 15px; font-weight: 700;">${results.processedMobile}</p><table><thead><tr><th>Serial No.</th><th>Pairing</th><th>Compatibility</th><th>Points</th></tr></thead><tbody>`;
+            
+            results.pairings.forEach(p => html += `<tr><td>${p.pairNum}</td><td>${p.pair}</td><td>${p.compatibility}</td><td class="text-right">${p.points}</td></tr>`);
+            
+            html += `</tbody></table><p style="text-align: right; font-weight: 700;">Total Points (Step-1): ${results.step1Points}</p></div><div class="section"><h2>STEP-2: COMPOUND OF MOBILE NO. TOTAL</h2><p><strong>Compound (From Actual Mobile No. Total)</strong> ${results.mobileTotal}</p><p><strong>Compatibility Between Compound (${results.digit1} and ${results.digit2})</strong> ${results.compoundCompat}</p><p style="text-align: right; font-weight: 700;">Points (Step-2): ${results.step2Points}</p></div><div class="section"><h2>STEP-3: SINGLE DIGIT TOTAL TO PN/DN</h2><p><strong>Compound</strong> ${results.mobileTotal}</p><p><strong>Compound Totaling to Single Digit (${results.digit1} + ${results.digit2})</strong> ${results.mobileSingleDigit}</p><p><strong>PN/DN (Age <=35 - PN / >35 - DN)</strong> ${results.pnDnToUse}</p><p><strong>Compatibility (Total to PN/DN)</strong> ${results.finalCompat}</p><p style="text-align: right; font-weight: 700;">Points (Step-3): ${results.step3Points}</p></div><div class="section"><h2 style="text-align: right;">Grand Total (All 3 Steps)</h2><h1 style="text-align: right; color: #667eea; font-size: 32px;">${results.totalPoints}</h1><div class="recommendation ${results.totalPoints >= 75 ? 'good' : 'bad'}">${results.recommendation}</div></div><div class="section"><h2>NAME NUMBER CALCULATION - CHALDEAN CHART</h2><p style="margin-bottom: 15px;"><strong>First Name</strong> ${formData.firstName} | <strong>Middle Name</strong> ${formData.middleName || '-'} | <strong>Last Name</strong> ${formData.lastName || '-'}</p><div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;"><div class="chaldean-box"><div style="font-weight: 700; margin-bottom: 10px;">FIRST NAME</div><p style="margin-bottom: 8px;">${formData.firstName}</p><div class="chaldean-letter">${formData.firstName.toUpperCase().split('').map(c => `<div class="letter-sq">${c}</div>`).join('')}</div><div class="chaldean-number">${formData.firstName.toUpperCase().split('').map(c => `<div class="letter-sq yellow-sq">${chaldeanMap[c] || ''}</div>`).join('')}</div><p style="font-weight: 700; margin-top: 10px;">Total: ${results.firstNameNum}</p></div><div class="chaldean-box"><div style="font-weight: 700; margin-bottom: 10px;">MIDDLE NAME</div><p style="margin-bottom: 8px;">${formData.middleName || '-'}</p><div class="chaldean-letter">${(formData.middleName || '').toUpperCase().split('').map(c => `<div class="letter-sq">${c}</div>`).join('')}</div><div class="chaldean-number">${(formData.middleName || '').toUpperCase().split('').map(c => `<div class="letter-sq yellow-sq">${chaldeanMap[c] || ''}</div>`).join('')}</div><p style="font-weight: 700; margin-top: 10px;">Total: ${results.middleNameNum}</p></div><div class="chaldean-box"><div style="font-weight: 700; margin-bottom: 10px;">LAST NAME</div><p style="margin-bottom: 8px;">${formData.lastName || '-'}</p><div class="chaldean-letter">${(formData.lastName || '').toUpperCase().split('').map(c => `<div class="letter-sq">${c}</div>`).join('')}</div><div class="chaldean-number">${(formData.lastName || '').toUpperCase().split('').map(c => `<div class="letter-sq yellow-sq">${chaldeanMap[c] || ''}</div>`).join('')}</div><p style="font-weight: 700; margin-top: 10px;">Total: ${results.lastNameNum}</p></div></div><p style="font-weight: 700; margin-top: 20px; font-size: 16px;">Grand Total: ${results.totalNameNum}</p></div><div class="button-group"><button onclick="renderForm()">🔄 Calculate Another</button><button class="button-secondary" onclick="window.print()">🖨️ Print Report</button></div></div>`;
+            
+            app.innerHTML = html;
+        }
+
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(() => {});
+        renderForm();
+    </script>
+</body>
+</html>
